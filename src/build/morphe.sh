@@ -1,7 +1,7 @@
 #!/bin/bash
 # Morphe build
 
-set -euo pipefail
+set -eo pipefail
 
 source ./src/build/utils.sh
 
