@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Automated Morphe Patcher Builds</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020617;
+      --bg-card: #020617;
+      --bg-overlay: rgba(15,23,42,0.85);
+      --accent: #38bdf8;
+      --accent-soft: rgba(56,189,248,0.1);
+      --accent-strong: #0ea5e9;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border-subtle: rgba(148,163,184,0.25);
+      --danger: #f97373;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(56,189,248,0.12) 0, transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(147,51,234,0.12) 0, transparent 55%),
+        radial-gradient(circle at 0% 100%, rgba(34,197,94,0.08) 0, transparent 55%),
+        var(--bg);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .shell {
+      width: 100%;
+      max-width: 960px;
+      border-radius: 1.5rem;
+      padding: 1px;
+      background: radial-gradient(circle at 0 0, rgba(56,189,248,0.7), transparent 55%),
+                  radial-gradient(circle at 100% 0, rgba(147,51,234,0.6), transparent 55%),
+                  radial-gradient(circle at 50% 100%, rgba(34,197,94,0.5), transparent 55%);
+    }
+    .card {
+      border-radius: 1.45rem;
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(3,7,18,0.99));
+      padding: 2.25rem 2.5rem 2.5rem;
+      border: 1px solid rgba(15,23,42,0.6);
+      box-shadow:
+        0 24px 80px rgba(15,23,42,0.9),
+        0 0 0 1px rgba(15,23,42,0.9);
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2.25fr);
+      gap: 2.25rem;
+    }
+    @media (max-width: 800px) {
+      .card {
+        grid-template-columns: minmax(0,1fr);
+        padding: 1.75rem 1.5rem 1.75rem;
+      }
+    }
+    h1 {
+      margin: 0 0 0.75rem;
+      font-size: clamp(1.9rem, 3vw, 2.25rem);
+      letter-spacing: 0.02em;
+    }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid rgba(148,163,184,0.45);
+      background: radial-gradient(circle at 0 0, rgba(15,23,42,0.95), rgba(15,23,42,0.85));
+      color: var(--text-muted);
+    }
+    .badge-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.2);
+    }
+    p.lead {
+      margin: 0 0 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.96rem;
+      line-height: 1.7;
+    }
+    .apps-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 1.75rem;
+    }
+    .app-pill {
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.85);
+      border: 1px solid rgba(148,163,184,0.35);
+      font-size: 0.82rem;
+      color: var(--text-main);
+    }
+    .primary-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.6rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 500;
+      background: radial-gradient(circle at 0 0, var(--accent-strong), var(--accent));
+      color: black;
+      text-decoration: none;
+      box-shadow:
+        0 14px 45px rgba(56,189,248,0.45),
+        0 0 0 1px rgba(15,23,42,0.9);
+      transition: transform 0.14s ease-out, box-shadow 0.14s ease-out, background 0.14s ease-out;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      background: radial-gradient(circle at 0 0, #0ea5e9, #22c55e);
+      box-shadow:
+        0 18px 55px rgba(59,130,246,0.55),
+        0 0 0 1px rgba(15,23,42,0.8);
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: radial-gradient(circle at 0 0, rgba(15,23,42,0.9), rgba(15,23,42,0.95));
+      color: var(--text-muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .btn-secondary:hover {
+      border-color: rgba(148,163,184,0.9);
+      color: var(--text-main);
+    }
+    .right {
+      border-radius: 1.2rem;
+      border: 1px solid rgba(148,163,184,0.45);
+      background:
+        radial-gradient(circle at 0 0, rgba(56,189,248,0.08), transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(147,51,234,0.06), transparent 55%),
+        radial-gradient(circle at 0 100%, rgba(34,197,94,0.08), transparent 55%),
+        rgba(15,23,42,0.96);
+      padding: 1.25rem 1.35rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .right::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0 0, rgba(148,163,184,0.08), transparent 55%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .right-inner {
+      position: relative;
+      z-index: 1;
+    }
+    .note-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+      color: #f9fafb;
+    }
+    .note-body {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .note-body strong {
+      color: #f9fafb;
+      font-weight: 600;
+    }
+    .note-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.5);
+      margin-top: 0.4rem;
+      color: var(--text-main);
+    }
+    .list {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+    .list li {
+      margin-bottom: 0.25rem;
+    }
+    .fine-print {
+      margin-top: 0.8rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .fine-print a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .fine-print a:hover {
+      color: var(--accent-strong);
+    }
+  </style>
+</head>
+<body>
+  <!-- NOTE: replace YOUR_USERNAME and YOUR_REPO below with your actual GitHub values -->
+  <div class="shell">
+    <div class="card">
+      <section>
+        <div class="badge-row">
+          <div class="badge">
+            <span class="badge-dot"></span>
+            Automated Morphe builder · Non‑root
+          </div>
+        </div>
+        <h1>Patched YouTube, YT Music &amp; Reddit</h1>
+        <p class="lead">
+          This page does <strong>not</strong> host APKs directly. All builds are generated
+          automatically from the latest <strong>Morphe Patches</strong> and published as
+          GitHub Releases for this repository.
+        </p>
+        <div class="apps-row">
+          <span class="app-pill">YouTube</span>
+          <span class="app-pill">YouTube Music</span>
+          <span class="app-pill">Reddit</span>
+        </div>
+        <div class="primary-actions">
+          <a
+            id="releases-link"
+            class="btn-primary"
+            href="https://github.com/Raghucharan16/AutomatedMorphePatcher/releases"
+            target="_blank"
+            rel="noreferrer"
+          >
+            View GitHub Releases
+            <span>↗</span>
+          </a>
+          <a
+            class="btn-secondary"
+            href="https://github.com/MorpheApp/morphe-manager"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Morphe patches source
+          </a>
+        </div>
+      </section>
+
+      <aside class="right">
+        <div class="right-inner">
+          <div class="note-title">Important notes</div>
+          <div class="note-body">
+            <strong>MicroG (or compatible replacement) is required</strong> to use the
+            YouTube and YouTube Music builds from these Releases on non‑root devices.
+            Without it, sign‑in and some Google‑related functionality will not work.
+          </div>
+          <div class="note-pill">
+            <span>⚠</span>
+            MicroG is a hard requirement for most non‑root users.
+            <a href="https://github.com/MorpheApp/MicroG-RE/releases" target="_blank" rel="noreferrer">Download MicroG</a>
+          </div>
+
+          <ul class="list">
+            <li>Always uninstall any older patched variants before installing a new build.</li>
+            <li>Only download APKs you trust and understand the risks of sideloading.</li>
+            <li>These builds are <strong>unofficial</strong> and not affiliated with Google, Reddit, or Morphe.</li>
+          </ul>
+
+          <div class="fine-print">
+            <strong>Attribution:</strong> This app uses code from Morphe.
+            To learn more, visit
+            <a href="https://github.com/MorpheApp" target="_blank" rel="noreferrer">Morphe App Github</a>.
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,32 +1,31 @@
 ## Automated Morphe Patcher
 
-This repository is intended to **automate patching of APKs for YouTube, YouTube Music, and Reddit using Morphe CLI and Morphe Patches**, and then **publish the patched APKs via GitHub Pages**.
+This repository **automates patching of YouTube, YouTube Music, and Reddit APKs using Morphe CLI and Morphe Patches**, and publishes the patched builds as **GitHub Releases**. A separate static `index.html` can be hosted (e.g. via GitHub Pages) to point users to the Releases page without exposing direct APK links.
 
-### What this repo will do
+### How it works
 
-- **Download Morphe CLI and Morphe Patches bundle** from their latest GitHub releases.
-- **Download source APKs** (for YouTube, YouTube Music, and Reddit) from URLs you provide (for example, direct APKMirror download links).
-- **Apply the latest Morphe patches** to each APK using Morphe CLI.
-- **Export patched APKs and a simple `index.html`** into a `dist/` folder.
-- **Deploy `dist/` to GitHub Pages** via a GitHub Actions workflow.
+- **Every 2 hours** (and on manual dispatch), the workflow in `.github/workflows/patch-and-deploy.yml`:
+  - Queries `MorpheApp/morphe-patches` for the **latest release tag**.
+  - Checks if this repository already has a **Release with that tag**.
+  - **If a Release for that tag already exists** → it **does nothing** (no APK downloads, no patching).
+  - **If no Release exists yet for that tag** → it runs `src/build/morphe.sh all` once:
+    - `src/build/utils.sh` downloads latest **Morphe CLI** and **Morphe Patches**.
+    - Determines compatible app versions via the Morphe CLI `list-patches` command.
+    - Downloads the appropriate APKs from **APKMirror** and merges splits if needed.
+    - Applies the Morphe patches for:
+      - YouTube
+      - YouTube Music
+      - Reddit
+    - Writes the patched APKs into the `release/` directory.
+  - Creates a **GitHub Release** tagged with the Morphe patches version and attaches all `release/*.apk`.
 
-> **Important:** APKMirror is behind anti‑bot protections and does not provide a public API.  
-> In practice, this means a fully reliable “auto‑discover latest APK from APKMirror” step cannot be guaranteed from GitHub Actions alone.  
-> The workflow will be designed to take **direct APK download URLs** (which can be from APKMirror or elsewhere). You can update those URLs (or automate that part yourself) to always point at the latest supported versions.
+### Where users download from
 
-### High‑level architecture
-
-- `config/apps.yml`: configuration for each app (package name, human name, APK download URL, output filename, etc.).
-- `scripts/patch_apps.py`: Python script that:
-  - fetches latest Morphe CLI JAR,
-  - fetches latest Morphe patches `.mpp`,
-  - downloads each configured APK,
-  - runs `java -jar morphe-cli.jar patch --patches patches.mpp ...`,
-  - writes patched APKs and a simple listing page into `dist/`.
-- `.github/workflows/patch-and-deploy.yml`: GitHub Actions workflow that:
-  - runs on `workflow_dispatch` and optional `schedule`,
-  - executes `scripts/patch_apps.py`,
-  - publishes `dist/` via GitHub Pages.
+- End‑users should download builds **only from the Releases page** of this repository.
+- A static `index.html` (at the repo root) can be hosted on GitHub Pages and will:
+  - Show a simple landing page.
+  - Provide a single button/link that redirects users to the **Releases** tab.
+  - Remind users that **MicroG (or equivalent) is required** for certain apps (e.g. YouTube / YouTube Music) to function properly.
 
 ### Legal and licensing notes
 
@@ -36,27 +35,24 @@ This repository is intended to **automate patching of APKs for YouTube, YouTube 
 - Morphe Patches are licensed under **GPLv3 with additional Section 7 conditions**. In particular:
   - You must show the attribution text:  
     **“This app uses code from Morphe. To learn more, visit https://morphe.software”**  
-    on the distribution page (for example, on the GitHub Pages landing page).
+    on your distribution page (for example, on the GitHub Pages landing page).
   - The name **“Morphe”** cannot be used for derivative works as their own product name. This repository is an **unofficial automation helper** that uses the official tools.
 
-Make sure you are allowed to:
+Please ensure you are allowed to:
 
 - Download and redistribute the original APKs you patch.
-- Distribute the patched APKs in your jurisdiction and under the app publisher’s terms.
-
-### How to configure APK sources
-
-- **Edit `config/apps.yml`** and, for each app, set:
-  - `apk_url`: a direct download link to the APK/APKM of the version you want to patch (commonly from APKMirror).
-  - `output_file`: name of the patched file that will appear on the GitHub Pages site.
-- The script does **no scraping** of APKMirror; it only downloads from the URLs you provide.
-  - You can manually update these URLs whenever Morphe adds support for a newer version.
-  - Or, you can maintain a small separate script or workflow that updates `config/apps.yml` to always point to the latest supported APK URLs.
+- Distribute the patched APKs in your jurisdiction and under the original app publishers’ terms.
 
 ### Running the automation
 
-1. Push this repository to GitHub and enable **GitHub Pages** (Source: “GitHub Actions”).
-2. In GitHub, go to **Actions → Automated Morphe Patcher → Run workflow** to trigger patching on demand, or let the cron schedule run.
-3. When the workflow finishes, the **GitHub Pages URL** will serve `dist/index.html` with download links to the patched APKs.
+1. Push this repository to GitHub.
+2. Ensure **Actions** are enabled.
+3. Optionally adjust the cron in `.github/workflows/patch-and-deploy.yml` (defaults to every 2 hours).
+4. Use **Actions → Automated Morphe Builder → Run workflow** to test once.
+5. Check the **Releases** tab; a Release should appear with the latest Morphe patches tag and the patched APKs.
 
+To host the static landing page:
 
+1. Keep `index.html` at the repository root.
+2. In GitHub **Settings → Pages**, set the source to the branch containing `index.html`.
+3. Share the GitHub Pages URL with users; it will send them to the Releases page instead of directly linking APKs.
