@@ -34,25 +34,8 @@ This repository **automates patching of YouTube, YouTube Music, and Reddit APKs 
   - Morphe Patches: `https://github.com/MorpheApp/morphe-patches`
 - Morphe Patches are licensed under **GPLv3 with additional Section 7 conditions**. In particular:
   - You must show the attribution text:  
-    **“This app uses code from Morphe. To learn more, visit https://morphe.software”**  
+    **“This app uses code from Morphe. To learn more, visit https://github.com/MorpheApp”**  
     on your distribution page (for example, on the GitHub Pages landing page).
   - The name **“Morphe”** cannot be used for derivative works as their own product name. This repository is an **unofficial automation helper** that uses the official tools.
 
-Please ensure you are allowed to:
 
-- Download and redistribute the original APKs you patch.
-- Distribute the patched APKs in your jurisdiction and under the original app publishers’ terms.
-
-### Running the automation
-
-1. Push this repository to GitHub.
-2. Ensure **Actions** are enabled.
-3. Optionally adjust the cron in `.github/workflows/patch-and-deploy.yml` (defaults to every 2 hours).
-4. Use **Actions → Automated Morphe Builder → Run workflow** to test once.
-5. Check the **Releases** tab; a Release should appear with the latest Morphe patches tag and the patched APKs.
-
-To host the static landing page:
-
-1. Keep `index.html` at the repository root.
-2. In GitHub **Settings → Pages**, set the source to the branch containing `index.html`.
-3. Share the GitHub Pages URL with users; it will send them to the Releases page instead of directly linking APKs.
